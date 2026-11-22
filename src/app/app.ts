@@ -125,10 +125,10 @@ const PENTHOUSE_TEMPLATE: RoomTemplate[] = [
 const STATUSES: RoomStatus[] = ['disponible', 'vendido', 'reservado', 'disponible'];
 
 const STATUS_COLOR: Record<RoomStatus, string> = {
-  disponible: '#5d9c7c',
+  disponible: '#3b82f6',
   reservado: '#b99550',
   vendido: '#a26963',
-  comun: '#718f9a',
+  comun: '#38bdf8',
 };
 
 function makeItems(t: RoomTemplate, kind: FloorKind, index: number): RoomItem[] {
@@ -490,9 +490,9 @@ export class App implements AfterViewInit, OnDestroy {
 
       this.box(target, 0, y + 0.17, 0, 16.4, 0.34, 11.4, slabColor, { floorIndex: i, kind: 'slab', faces: 5 });
 
-      const glassColor = this.night() ? '#e8d9b6' : '#c3d4d3';
+      const glassColor = this.night() ? '#bcd7f7' : '#cbdcf2';
       const glassAlpha = this.night() ? 0.16 : 0.13;
-      const glassStroke = this.night() ? 'rgba(245,220,170,.3)' : 'rgba(255,255,255,.2)';
+      const glassStroke = this.night() ? 'rgba(191,219,254,.35)' : 'rgba(255,255,255,.2)';
       const glassOpts: BoxOptions = { floorIndex: i, kind: 'glass', alpha: glassAlpha, stroke: glassStroke };
       this.quad(target, [[-8, y + 0.42, 5.5], [8, y + 0.42, 5.5], [8, y + 3.36, 5.5], [-8, y + 3.36, 5.5]], glassColor, glassOpts);
       this.quad(target, [[8, y + 0.42, -5.5], [-8, y + 0.42, -5.5], [-8, y + 3.36, -5.5], [8, y + 3.36, -5.5]], glassColor, glassOpts);
@@ -527,7 +527,7 @@ export class App implements AfterViewInit, OnDestroy {
             [room.x + room.w * 0.32, y + 0.36, room.z - room.d * 0.3],
             [room.x + room.w * 0.32, y + 0.36, room.z + room.d * 0.3],
             [room.x - room.w * 0.32, y + 0.36, room.z + room.d * 0.3],
-          ], '#f5dfb0', { ...opts, kind: 'patch', alpha: 0.14 });
+          ], '#cfe3ff', { ...opts, kind: 'patch', alpha: 0.14 });
         }
 
         const wallH = 0.92;
@@ -585,7 +585,7 @@ export class App implements AfterViewInit, OnDestroy {
       const b = this.project([g, -0.45, 28]);
       const c = this.project([-28, -0.45, g]);
       const d = this.project([28, -0.45, g]);
-      ctx.strokeStyle = this.night() ? 'rgba(56,189,248,.075)' : 'rgba(45,212,191,.09)';
+      ctx.strokeStyle = this.night() ? 'rgba(56,189,248,.075)' : 'rgba(59,130,246,.1)';
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
@@ -607,7 +607,7 @@ export class App implements AfterViewInit, OnDestroy {
     ctx.arc(0, 0, 23, 0, Math.PI * 2);
     ctx.stroke();
     ctx.rotate(-this.cam.yaw);
-    ctx.fillStyle = '#34d399';
+    ctx.fillStyle = '#60a5fa';
     ctx.beginPath();
     ctx.moveTo(0, -17);
     ctx.lineTo(5, 3);
@@ -634,12 +634,12 @@ export class App implements AfterViewInit, OnDestroy {
         const active = selected === i;
         ctx.save();
         this.roundRect(ctx, p.x - w / 2, p.y - h / 2, w, h, 7 * scale);
-        ctx.fillStyle = active ? 'rgba(63,125,104,.96)' : 'rgba(12,22,25,.88)';
+        ctx.fillStyle = active ? 'rgba(30,64,175,.96)' : 'rgba(12,22,25,.88)';
         ctx.fill();
-        ctx.strokeStyle = active ? '#a8d0bf' : 'rgba(200,212,205,.32)';
+        ctx.strokeStyle = active ? '#bfdbfe' : 'rgba(191,219,254,.35)';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.fillStyle = active ? '#f4faf5' : '#e3e9e6';
+        ctx.fillStyle = active ? '#eff6ff' : '#e3e9e6';
         ctx.font = `700 ${11 * scale}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -661,12 +661,12 @@ export class App implements AfterViewInit, OnDestroy {
       const w = ctx.measureText(text).width + 22 * scale;
       const h = 24 * scale;
       this.roundRect(ctx, p.x - w / 2, p.y - h / 2, w, h, 8 * scale);
-      ctx.fillStyle = active ? 'rgba(47,74,67,.96)' : 'rgba(12,22,25,.9)';
+      ctx.fillStyle = active ? 'rgba(23,47,90,.96)' : 'rgba(12,22,25,.9)';
       ctx.fill();
-      ctx.strokeStyle = active || hovered ? '#d8c39a' : 'rgba(200,212,205,.3)';
+      ctx.strokeStyle = active || hovered ? '#93c5fd' : 'rgba(191,219,254,.3)';
       ctx.lineWidth = active ? 2 : 1;
       ctx.stroke();
-      ctx.fillStyle = active ? '#fbf3df' : '#e6ece9';
+      ctx.fillStyle = active ? '#eff6ff' : '#e6ece9';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, p.x, p.y + 0.5);
@@ -716,17 +716,17 @@ export class App implements AfterViewInit, OnDestroy {
       ctx.closePath();
       ctx.fillStyle = this.rgba(face.color, alpha);
       if (roomHighlighted && face.kind === 'patch') {
-        ctx.shadowColor = 'rgba(255,244,214,.8)';
+        ctx.shadowColor = 'rgba(147,197,253,.85)';
         ctx.shadowBlur = 9 + Math.sin(this.time * 2.4) * 3;
       }
       if (itemSelected) {
-        ctx.shadowColor = '#e8c98a';
+        ctx.shadowColor = '#93c5fd';
         ctx.shadowBlur = 14;
       }
       ctx.fill();
       ctx.shadowBlur = 0;
       if (face.stroke || roomHighlighted || itemSelected) {
-        ctx.strokeStyle = itemSelected ? '#f0d39a' : roomHighlighted ? 'rgba(255,252,240,.9)' : (face.stroke ?? 'transparent');
+        ctx.strokeStyle = itemSelected ? '#bfdbfe' : roomHighlighted ? 'rgba(239,246,255,.92)' : (face.stroke ?? 'transparent');
         ctx.lineWidth = itemSelected ? 2.4 : roomHighlighted ? 1.6 : 1;
         ctx.stroke();
       }
