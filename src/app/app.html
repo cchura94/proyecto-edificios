@@ -68,29 +68,69 @@
   <aside class="info-panel">
     @if (selectedFloor(); as idx) {
       @if (selectedRoom(); as room) {
-        <div class="card room-card">
-          <div class="card-top">
-            <span class="eyebrow">Piso {{ floors[idx].label }} · {{ room.type }}</span>
-            <span class="status-chip" [class]="'status-chip ' + room.status">{{ statusLabel[room.status] }}</span>
+        @if (selectedItem(); as item) {
+          <div class="card item-card">
+            <div class="card-top">
+              <span class="eyebrow">Elemento · {{ room.name }}</span>
+              <button class="close-btn" type="button" (click)="clearItem()" aria-label="Cerrar">×</button>
+            </div>
+            <div class="item-visual" [style.background]="item.color"></div>
+            <h2>{{ item.name }}</h2>
+            <p class="description">Selecciona cualquier objeto del modelo para inspeccionarlo. Puedes activar el recorrido 3D para verlo desde otro ángulo.</p>
+            <div class="specs">
+              <div class="spec"><strong>{{ item.w.toFixed(1) }} m</strong><span>Ancho</span></div>
+              <div class="spec"><strong>{{ item.d.toFixed(1) }} m</strong><span>Fondo</span></div>
+              <div class="spec"><strong>{{ item.h.toFixed(1) }} m</strong><span>Alto</span></div>
+            </div>
+            <button class="tool-toggle wide" type="button" [class.on]="tour()" (click)="toggleTour()">
+              {{ tour() ? 'Detener recorrido' : 'Recorrido 3D' }}
+            </button>
+            <button class="ghost-btn" type="button" (click)="clearItem()">Volver a {{ room.name }}</button>
           </div>
-          <h2>{{ room.name }}</h2>
-          <div class="price-row">
-            <span class="price">{{ room.price }}</span>
-            <span class="area">{{ room.area }} m²</span>
+        } @else {
+          <div class="card room-card">
+            <div class="card-top">
+              <span class="eyebrow">Piso {{ floors[idx].label }} · {{ room.type }}</span>
+              <span class="status-chip" [class]="'status-chip ' + room.status">{{ statusLabel[room.status] }}</span>
+            </div>
+            <h2>{{ room.name }}</h2>
+            <div class="price-row">
+              <span class="price">{{ room.price }}</span>
+              <span class="area">{{ room.area }} m²</span>
+            </div>
+            <div class="specs">
+              <div class="spec"><strong>{{ room.beds }}</strong><span>Dormitorios</span></div>
+              <div class="spec"><strong>{{ room.baths }}</strong><span>Baños</span></div>
+              <div class="spec"><strong>{{ floors[idx].label }}</strong><span>Nivel</span></div>
+            </div>
+            <p class="description">{{ room.desc }}</p>
+            <div class="room-tools">
+              <button class="tool-toggle" type="button" [class.on]="furnished()" (click)="toggleFurnished()">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 11V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4M3 11h18v6H3v-6Zm2 6v2m14-2v2" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
+                Amueblado
+              </button>
+              <button class="tool-toggle" type="button" [class.on]="tour()" (click)="toggleTour()">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 0v18M4 7.5l8 4.5 8-4.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
+                Recorrido 3D
+              </button>
+            </div>
+            <div class="section-label">Elementos del espacio · {{ room.items.length }}</div>
+            <div class="item-list">
+              @for (item of room.items; track item.id) {
+                <button class="item-chip" type="button" [class.active]="selectedItem()?.id === item.id" (click)="selectItem(item, room, idx)">
+                  <span class="item-swatch" [style.background]="item.color"></span>
+                  <span>{{ item.name }}</span>
+                </button>
+              }
+            </div>
+            @if (requestSent()) {
+              <div class="sent">Solicitud registrada. Un asesor te contactará pronto.</div>
+            } @else {
+              <button class="cta" type="button" (click)="requestInfo()">Solicitar información</button>
+            }
+            <button class="ghost-btn" type="button" (click)="selectFloor(idx)">Ver todo el piso</button>
           </div>
-          <div class="specs">
-            <div class="spec"><strong>{{ room.beds }}</strong><span>Dormitorios</span></div>
-            <div class="spec"><strong>{{ room.baths }}</strong><span>Baños</span></div>
-            <div class="spec"><strong>{{ floors[idx].label }}</strong><span>Nivel</span></div>
-          </div>
-          <p class="description">{{ room.desc }}</p>
-          @if (requestSent()) {
-            <div class="sent">Solicitud registrada. Un asesor te contactará pronto.</div>
-          } @else {
-            <button class="cta" type="button" (click)="requestInfo()">Solicitar información</button>
-          }
-          <button class="ghost-btn" type="button" (click)="selectFloor(idx)">Ver todo el piso</button>
-        </div>
+        }
       } @else {
         <div class="card floor-card">
           <div class="card-top">
@@ -122,7 +162,7 @@
           <div><span class="legend-dot sold"></span>Vendido</div>
           <div><span class="legend-dot common"></span>Zona común</div>
         </div>
-        <div class="welcome-tip">Haz clic en un piso o en cualquier unidad para comenzar.</div>
+        <div class="welcome-tip">Haz clic en un piso o unidad. Dentro de cada espacio puedes explorar su mobiliario, ocultarlo y activar un recorrido 3D.</div>
       </div>
     }
   </aside>
@@ -130,7 +170,7 @@
   <div class="bottom-bar">
     <div class="hint">
       <span class="hint-dot"></span>
-      Arrastra para rotar · Rueda para acercar · Clic para explorar
+      Arrastra para rotar · Rueda para acercar · Pasa el cursor y haz clic en objetos
     </div>
     <div class="controls">
       <button class="control" type="button" [class.on]="exploded()" (click)="toggleExplode()">
@@ -152,7 +192,10 @@
     </div>
   </div>
 
-  @if (hoveredRoom()) {
-    <div class="hover-tip">Clic para ver detalles</div>
+  @if (tooltip(); as tip) {
+    <div class="cursor-tip" [style.left.px]="tip.x" [style.top.px]="tip.y">
+      <strong>{{ tip.title }}</strong>
+      <span>{{ tip.sub }}</span>
+    </div>
   }
 </div>

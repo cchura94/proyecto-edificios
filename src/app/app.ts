@@ -10,6 +10,17 @@ import {
 
 type RoomStatus = 'disponible' | 'reservado' | 'vendido' | 'comun';
 
+interface RoomItem {
+  id: string;
+  name: string;
+  x: number;
+  z: number;
+  w: number;
+  d: number;
+  h: number;
+  color: string;
+}
+
 interface Room {
   id: string;
   name: string;
@@ -21,11 +32,13 @@ interface Room {
   price: string;
   status: RoomStatus;
   color: string;
+  material: string;
   x: number;
   z: number;
   w: number;
   d: number;
   desc: string;
+  items: RoomItem[];
 }
 
 type FloorKind = 'lobby' | 'residencial' | 'amenidades' | 'atico';
@@ -49,6 +62,8 @@ interface Face {
   alpha: number;
   stroke?: string;
   roomId?: string;
+  itemId?: string;
+  itemName?: string;
   floorIndex?: number;
   kind: FaceKind;
   screen: Point[];
@@ -59,6 +74,8 @@ type BoxOptions = {
   alpha?: number;
   stroke?: string;
   roomId?: string;
+  itemId?: string;
+  itemName?: string;
   floorIndex?: number;
   kind?: FaceKind;
   faces?: number;
@@ -73,38 +90,145 @@ type RoomTemplate = {
   beds: number;
   baths: number;
   color: string;
+  material: string;
   pos: [number, number, number, number];
   desc: string;
 };
 
 const RESIDENTIAL_TEMPLATE: RoomTemplate[] = [
-  { suffix: 'A', name: 'Residencia A', short: 'A', type: '2 Dormitorios', area: 92, beds: 2, baths: 2, color: '#2dd4bf', pos: [-4.9, -2.75, 5.8, 4.9], desc: 'Salón-comedor amplio, cocina equipada y dos dormitorios con baño propio.' },
-  { suffix: 'B', name: 'Residencia B', short: 'B', type: '1 Dormitorio', area: 68, beds: 1, baths: 1, color: '#38bdf8', pos: [4.9, -2.75, 5.8, 4.9], desc: 'Espacio eficiente y luminoso, ideal para vivir en el corazón de la ciudad.' },
-  { suffix: 'C', name: 'Studio C', short: 'C', type: 'Studio', area: 44, beds: 1, baths: 1, color: '#fbbf24', pos: [-4.9, 2.75, 5.8, 4.9], desc: 'Estudio flexible con zona de trabajo integrada y grandes ventanales.' },
-  { suffix: 'D', name: 'Residencia D', short: 'D', type: '3 Dormitorios', area: 118, beds: 3, baths: 2, color: '#c084fc', pos: [4.9, 2.75, 5.8, 4.9], desc: 'La unidad más espaciosa, con terraza interior y vistas panorámicas.' },
+  { suffix: 'A', name: 'Residencia A', short: 'A', type: '2 Dormitorios', area: 92, beds: 2, baths: 2, color: '#8f9f96', material: '#b08d63', pos: [-4.9, -2.75, 5.8, 4.9], desc: 'Salón-comedor amplio, cocina equipada y dos dormitorios con baño propio.' },
+  { suffix: 'B', name: 'Residencia B', short: 'B', type: '1 Dormitorio', area: 68, beds: 1, baths: 1, color: '#8fa3ad', material: '#c2a481', pos: [4.9, -2.75, 5.8, 4.9], desc: 'Espacio eficiente y luminoso, ideal para vivir en el corazón de la ciudad.' },
+  { suffix: 'C', name: 'Studio C', short: 'C', type: 'Studio', area: 44, beds: 1, baths: 1, color: '#ac9b7b', material: '#c9c6bd', pos: [-4.9, 2.75, 5.8, 4.9], desc: 'Estudio flexible con zona de trabajo integrada y grandes ventanales.' },
+  { suffix: 'D', name: 'Residencia D', short: 'D', type: '3 Dormitorios', area: 118, beds: 3, baths: 2, color: '#9a8f9e', material: '#9c7a56', pos: [4.9, 2.75, 5.8, 4.9], desc: 'La unidad más espaciosa, con terraza interior y vistas panorámicas.' },
 ];
 
 const LOBBY_TEMPLATE: RoomTemplate[] = [
-  { suffix: 'L1', name: 'Recepción', short: 'REC', type: 'Atención y conserjería', area: 86, beds: 0, baths: 0, color: '#f59e0b', pos: [-4.6, -2.6, 6.0, 4.8], desc: 'Acceso principal con conserjería 24 h, control de acceso y buzón inteligente.' },
-  { suffix: 'L2', name: 'Lounge', short: 'LG', type: 'Sala de espera', area: 78, beds: 0, baths: 0, color: '#22d3ee', pos: [4.6, -2.6, 6.0, 4.8], desc: 'Sala de estar con mobiliario de diseño y conexión Wi-Fi de alta velocidad.' },
-  { suffix: 'L3', name: 'Cafetería', short: 'CAF', type: 'Coworking café', area: 72, beds: 0, baths: 0, color: '#34d399', pos: [-4.6, 2.6, 6.0, 4.8], desc: 'Espacio de trabajo informal con máquinas de café y puntos de conexión.' },
-  { suffix: 'L4', name: 'Sala de juntas', short: 'SJ', type: 'Reuniones privadas', area: 64, beds: 0, baths: 0, color: '#818cf8', pos: [4.6, 2.6, 6.0, 4.8], desc: 'Sala privada con pantalla inteligente para reuniones de hasta 8 personas.' },
+  { suffix: 'L1', name: 'Recepción', short: 'REC', type: 'Atención y conserjería', area: 86, beds: 0, baths: 0, color: '#b09a72', material: '#b9b4aa', pos: [-4.6, -2.6, 6.0, 4.8], desc: 'Acceso principal con conserjería 24 h, control de acceso y buzón inteligente.' },
+  { suffix: 'L2', name: 'Lounge', short: 'LG', type: 'Sala de espera', area: 78, beds: 0, baths: 0, color: '#94a8ac', material: '#b08d63', pos: [4.6, -2.6, 6.0, 4.8], desc: 'Sala de estar con mobiliario de diseño y conexión Wi-Fi de alta velocidad.' },
+  { suffix: 'L3', name: 'Cafetería', short: 'CAF', type: 'Coworking café', area: 72, beds: 0, baths: 0, color: '#9aab8f', material: '#c2bdb2', pos: [-4.6, 2.6, 6.0, 4.8], desc: 'Espacio de trabajo informal con máquinas de café y puntos de conexión.' },
+  { suffix: 'L4', name: 'Sala de juntas', short: 'SJ', type: 'Reuniones privadas', area: 64, beds: 0, baths: 0, color: '#a29aa8', material: '#a9a49a', pos: [4.6, 2.6, 6.0, 4.8], desc: 'Sala privada con pantalla inteligente para reuniones de hasta 8 personas.' },
 ];
 
 const AMENITIES_TEMPLATE: RoomTemplate[] = [
-  { suffix: 'G', name: 'Gimnasio', short: 'GYM', type: 'Fitness', area: 128, beds: 0, baths: 0, color: '#4ade80', pos: [-4.9, -2.75, 5.8, 4.9], desc: 'Sala de entrenamiento con equipos de última generación y zona de yoga.' },
-  { suffix: 'S', name: 'Spa', short: 'SPA', type: 'Bienestar', area: 96, beds: 0, baths: 0, color: '#f472b6', pos: [4.9, -2.75, 5.8, 4.9], desc: 'Sauna, ducha sensorial y sala de masajes para los residentes.' },
-  { suffix: 'P', name: 'Piscina cubierta', short: 'POOL', type: 'Piscina climatizada', area: 112, beds: 0, baths: 0, color: '#38bdf8', pos: [-4.9, 2.75, 5.8, 4.9], desc: 'Piscina climatizada de 18 m con luz natural y zona de descanso.' },
-  { suffix: 'C', name: 'Coworking', short: 'CO', type: 'Espacio de trabajo', area: 84, beds: 0, baths: 0, color: '#fb7185', pos: [4.9, 2.75, 5.8, 4.9], desc: 'Puestos de trabajo, cabinas de llamadas y sala de videoconferencias.' },
+  { suffix: 'G', name: 'Gimnasio', short: 'GYM', type: 'Fitness', area: 128, beds: 0, baths: 0, color: '#8ca895', material: '#858c88', pos: [-4.9, -2.75, 5.8, 4.9], desc: 'Sala de entrenamiento con equipos de última generación y zona de yoga.' },
+  { suffix: 'S', name: 'Spa', short: 'SPA', type: 'Bienestar', area: 96, beds: 0, baths: 0, color: '#b39ba0', material: '#c9c2b6', pos: [4.9, -2.75, 5.8, 4.9], desc: 'Sauna, ducha sensorial y sala de masajes para los residentes.' },
+  { suffix: 'P', name: 'Piscina cubierta', short: 'POOL', type: 'Piscina climatizada', area: 112, beds: 0, baths: 0, color: '#8fa9b5', material: '#7fa8b2', pos: [-4.9, 2.75, 5.8, 4.9], desc: 'Piscina climatizada de 18 m con luz natural y zona de descanso.' },
+  { suffix: 'C', name: 'Coworking', short: 'CO', type: 'Espacio de trabajo', area: 84, beds: 0, baths: 0, color: '#ad9991', material: '#b08d63', pos: [4.9, 2.75, 5.8, 4.9], desc: 'Puestos de trabajo, cabinas de llamadas y sala de videoconferencias.' },
 ];
 
 const PENTHOUSE_TEMPLATE: RoomTemplate[] = [
-  { suffix: 'PH', name: 'Penthouse', short: 'PH', type: '4 Dormitorios · Dúplex', area: 226, beds: 4, baths: 3, color: '#facc15', pos: [-4.1, -2.6, 7.2, 5.4], desc: 'La residencia más exclusiva del edificio, con acabados premium y vistas de 270°.' },
-  { suffix: 'SL', name: 'Sky Lounge', short: 'SKY', type: 'Salón privado', area: 104, beds: 0, baths: 0, color: '#a78bfa', pos: [4.7, -2.6, 5.6, 5.4], desc: 'Salón panoral con barra, chimenea y acceso a la terraza superior.' },
-  { suffix: 'TE', name: 'Terraza', short: 'TER', type: 'Terraza ajardinada', area: 154, beds: 0, baths: 0, color: '#34d399', pos: [0, 2.75, 15.0, 4.9], desc: 'Terraza con jardín, zona de barbacoa, pérgola y photovoltaicos integrados.' },
+  { suffix: 'PH', name: 'Penthouse', short: 'PH', type: '4 Dormitorios · Dúplex', area: 226, beds: 4, baths: 3, color: '#b8a06b', material: '#a88461', pos: [-4.1, -2.6, 7.2, 5.4], desc: 'La residencia más exclusiva del edificio, con acabados premium y vistas de 270°.' },
+  { suffix: 'SL', name: 'Sky Lounge', short: 'SKY', type: 'Salón privado', area: 104, beds: 0, baths: 0, color: '#9d94ad', material: '#bdb8ae', pos: [4.7, -2.6, 5.6, 5.4], desc: 'Salón panoral con barra, chimenea y acceso a la terraza superior.' },
+  { suffix: 'TE', name: 'Terraza', short: 'TER', type: 'Terraza ajardinada', area: 154, beds: 0, baths: 0, color: '#8fae95', material: '#b99a72', pos: [0, 2.75, 15.0, 4.9], desc: 'Terraza con jardín, zona de barbacoa, pérgola y paneles fotovoltaicos integrados.' },
 ];
 
 const STATUSES: RoomStatus[] = ['disponible', 'vendido', 'reservado', 'disponible'];
+
+const STATUS_COLOR: Record<RoomStatus, string> = {
+  disponible: '#5d9c7c',
+  reservado: '#b99550',
+  vendido: '#a26963',
+  comun: '#718f9a',
+};
+
+function makeItems(t: RoomTemplate, kind: FloorKind, index: number): RoomItem[] {
+  const [x, z, w, d] = t.pos;
+  const items: RoomItem[] = [];
+  const add = (key: string, name: string, ox: number, oz: number, iw: number, idepth: number, h: number, color: string) => {
+    items.push({
+      id: `f${index}-${t.suffix}-${key}`,
+      name,
+      x: x + ox * w,
+      z: z + oz * d,
+      w: iw * w,
+      d: idepth * d,
+      h,
+      color,
+    });
+  };
+
+  if (kind === 'residencial') {
+    if (t.suffix === 'A' || t.suffix === 'D') {
+      add('bed1', 'Cama principal queen', -0.24, -0.22, 0.34, 0.3, 0.54, '#eeeae1');
+      add('bed2', 'Segunda cama', 0.24, -0.22, 0.28, 0.26, 0.5, '#e4dfd5');
+      add('ward', 'Armario empotrado', 0.37, 0.06, 0.12, 0.42, 1.18, '#9d7c5b');
+      add('sofa', 'Sofá de salón', -0.08, 0.26, 0.42, 0.16, 0.56, '#909a95');
+      add('table', 'Mesa de comedor', 0.2, 0.26, 0.22, 0.18, 0.48, '#ad8a64');
+      add('plant', 'Planta decorativa', -0.37, 0.36, 0.1, 0.1, 0.72, '#648b68');
+    } else if (t.suffix === 'B') {
+      add('bed', 'Cama doble', -0.2, -0.2, 0.36, 0.3, 0.54, '#eeeae1');
+      add('desk', 'Escritorio', 0.24, -0.22, 0.3, 0.16, 0.52, '#9d7c5b');
+      add('sofa', 'Sofá individual', 0.04, 0.26, 0.34, 0.18, 0.56, '#909a95');
+      add('plant', 'Planta decorativa', -0.37, 0.34, 0.1, 0.1, 0.72, '#648b68');
+    } else {
+      add('bed', 'Cama convertible', -0.2, -0.2, 0.36, 0.28, 0.52, '#eeeae1');
+      add('desk', 'Mesa de trabajo', 0.24, -0.2, 0.3, 0.15, 0.5, '#9d7c5b');
+      add('sofa', 'Sofá compacto', 0, 0.26, 0.4, 0.18, 0.54, '#909a95');
+      add('plant', 'Planta decorativa', -0.37, 0.35, 0.1, 0.1, 0.72, '#648b68');
+    }
+  } else if (kind === 'lobby') {
+    if (t.suffix === 'L1') {
+      add('desk', 'Mostrador de recepción', -0.06, -0.08, 0.52, 0.14, 0.95, '#a88765');
+      add('sofa', 'Sofá de espera', 0.24, 0.28, 0.38, 0.16, 0.6, '#909a95');
+      add('plant', 'Planta de interior', -0.36, 0.3, 0.12, 0.12, 0.86, '#648b68');
+    } else if (t.suffix === 'L2') {
+      add('sofa1', 'Sofá de tres plazas', -0.18, -0.12, 0.44, 0.17, 0.58, '#8e9893');
+      add('sofa2', 'Butaca', 0.26, 0.16, 0.24, 0.2, 0.58, '#a3a9a1');
+      add('table', 'Mesa de centro', 0.02, 0.16, 0.2, 0.16, 0.4, '#b08d63');
+      add('plant', 'Planta de interior', -0.36, 0.34, 0.12, 0.12, 0.86, '#648b68');
+    } else if (t.suffix === 'L3') {
+      add('bar', 'Barra de café', -0.1, -0.14, 0.5, 0.16, 0.95, '#a88765');
+      add('table1', 'Mesa alta', 0.24, 0.16, 0.22, 0.2, 0.68, '#c2bdb2');
+      add('table2', 'Mesa alta', -0.26, 0.3, 0.22, 0.2, 0.68, '#c2bdb2');
+      add('plant', 'Planta de interior', 0.36, -0.3, 0.12, 0.12, 0.86, '#648b68');
+    } else {
+      add('table', 'Mesa de juntas', 0, 0, 0.52, 0.3, 0.55, '#a88765');
+      add('screen', 'Pantalla inteligente', 0, -0.42, 0.34, 0.05, 1.1, '#5c6668');
+      add('chair1', 'Silla de reunión', -0.3, 0.28, 0.14, 0.14, 0.5, '#7d8781');
+      add('chair2', 'Silla de reunión', 0.3, 0.28, 0.14, 0.14, 0.5, '#7d8781');
+    }
+  } else if (kind === 'amenidades') {
+    if (t.suffix === 'G') {
+      add('tread1', 'Cinta de correr', -0.24, -0.16, 0.16, 0.38, 0.5, '#666e6b');
+      add('tread2', 'Cinta de correr', 0.02, -0.16, 0.16, 0.38, 0.5, '#666e6b');
+      add('bench', 'Banco de pesas', 0.28, 0.12, 0.3, 0.16, 0.48, '#7b837f');
+      add('mat', 'Zona de yoga', -0.2, 0.3, 0.36, 0.22, 0.08, '#8ba493');
+    } else if (t.suffix === 'S') {
+      add('sauna', 'Sauna', -0.24, -0.18, 0.34, 0.34, 1.05, '#a88765');
+      add('bed1', 'Camilla de masaje', 0.24, -0.14, 0.36, 0.18, 0.48, '#e4dfd5');
+      add('bed2', 'Camilla de masaje', 0.24, 0.2, 0.36, 0.18, 0.48, '#e4dfd5');
+      add('plant', 'Planta decorativa', -0.36, 0.34, 0.1, 0.1, 0.7, '#648b68');
+    } else if (t.suffix === 'P') {
+      add('water', 'Lámina de agua', 0, -0.02, 0.72, 0.62, 0.14, '#6fa8b8');
+      add('chair1', 'Tumbonal', -0.4, -0.3, 0.14, 0.2, 0.34, '#c2bdb2');
+      add('chair2', 'Tumbonal', 0.4, 0.3, 0.14, 0.2, 0.34, '#c2bdb2');
+    } else {
+      add('desk', 'Mesa de trabajo', -0.12, -0.1, 0.5, 0.24, 0.56, '#a88765');
+      add('chair', 'Silla ergonómica', -0.12, 0.22, 0.14, 0.14, 0.5, '#737d78');
+      add('booth', 'Cabina de llamadas', 0.32, -0.16, 0.2, 0.26, 1.2, '#98a39d');
+      add('plant', 'Planta decorativa', 0.32, 0.34, 0.1, 0.1, 0.72, '#648b68');
+    }
+  } else {
+    if (t.suffix === 'PH') {
+      add('bed', 'Cama king', -0.24, -0.2, 0.38, 0.3, 0.58, '#eeeae1');
+      add('sofa', 'Sofá de diseño', 0.2, 0.16, 0.42, 0.18, 0.6, '#9aa39c');
+      add('table', 'Mesa baja', 0.18, -0.16, 0.24, 0.18, 0.4, '#ad8a64');
+      add('plant', 'Planta decorativa', -0.36, 0.34, 0.1, 0.1, 0.78, '#648b68');
+    } else if (t.suffix === 'SL') {
+      add('bar', 'Barra del salón', -0.2, -0.18, 0.42, 0.16, 0.95, '#a88765');
+      add('sofa', 'Sofá lounge', 0.2, 0.14, 0.4, 0.2, 0.6, '#9aa39c');
+      add('fire', 'Chimenea', -0.32, 0.3, 0.16, 0.16, 0.9, '#8d8b83');
+      add('plant', 'Planta decorativa', 0.36, -0.3, 0.1, 0.1, 0.78, '#648b68');
+    } else {
+      add('deck', 'Plataforma de madera', 0, 0, 0.86, 0.66, 0.08, '#a88765');
+      add('garden1', 'Jardinera', -0.34, -0.3, 0.18, 0.2, 0.6, '#648b68');
+      add('garden2', 'Jardinera', 0.34, 0.3, 0.18, 0.2, 0.6, '#648b68');
+      add('table', 'Mesa exterior', 0, 0.06, 0.24, 0.22, 0.48, '#b7b1a5');
+      add('bbq', 'Barbacoa', 0.36, -0.3, 0.16, 0.14, 0.72, '#7c807d');
+    }
+  }
+  return items;
+}
 
 function buildRooms(index: number, kind: FloorKind): Room[] {
   let templates: RoomTemplate[];
@@ -127,11 +251,13 @@ function buildRooms(index: number, kind: FloorKind): Room[] {
       price: kind === 'lobby' || kind === 'amenidades' || t.suffix === 'TE' ? 'Común' : `$${Math.round((area * 2.35 + index * 7) / 5) * 5}k`,
       status: kind === 'lobby' || kind === 'amenidades' || t.suffix === 'TE' ? 'comun' : STATUSES[(index + i) % STATUSES.length],
       color: t.color,
+      material: t.material,
       x: t.pos[0],
       z: t.pos[1],
       w: t.pos[2],
       d: t.pos[3],
       desc: t.desc,
+      items: makeItems(t, kind, index),
     };
   });
 }
@@ -178,7 +304,11 @@ export class App implements AfterViewInit, OnDestroy {
   readonly view = signal<ViewMode>('tower');
   readonly selectedFloor = signal<number | null>(null);
   readonly selectedRoom = signal<Room | null>(null);
+  readonly selectedItem = signal<RoomItem | null>(null);
   readonly hoveredRoom = signal<string | null>(null);
+  readonly tooltip = signal<{ x: number; y: number; title: string; sub: string } | null>(null);
+  readonly furnished = signal(true);
+  readonly tour = signal(false);
   readonly exploded = signal(true);
   readonly night = signal(false);
   readonly autoRotate = signal(true);
@@ -234,7 +364,13 @@ export class App implements AfterViewInit, OnDestroy {
 
   private tick = (): void => {
     const k = 0.12;
-    if (this.autoRotate() && !this.dragging) this.goal.yaw += 0.0018;
+    if (this.tour() && this.selectedRoom()) {
+      this.goal.yaw += 0.007;
+      this.goal.pitch = 0.48;
+      this.goal.zoom = this.selectedItem() ? 2.9 : 2.45;
+    } else if (this.autoRotate() && !this.dragging) {
+      this.goal.yaw += 0.0018;
+    }
     this.cam.yaw += (this.goal.yaw - this.cam.yaw) * k;
     this.cam.pitch += (this.goal.pitch - this.cam.pitch) * k;
     this.cam.zoom += (this.goal.zoom - this.cam.zoom) * k;
@@ -277,7 +413,7 @@ export class App implements AfterViewInit, OnDestroy {
     const raw = hex.replace('#', '');
     const adjust = (part: string) => {
       const base = parseInt(part, 16);
-      const night = this.night() ? 0.82 : 1;
+      const night = this.night() ? 0.78 : 1;
       return Math.max(0, Math.min(255, Math.round(base * factor * night))).toString(16).padStart(2, '0');
     };
     const result = `#${adjust(raw.slice(0, 2))}${adjust(raw.slice(2, 4))}${adjust(raw.slice(4, 6))}`;
@@ -302,6 +438,8 @@ export class App implements AfterViewInit, OnDestroy {
       alpha: opts.alpha ?? 1,
       stroke: opts.stroke,
       roomId: opts.roomId,
+      itemId: opts.itemId,
+      itemName: opts.itemName,
       floorIndex: opts.floorIndex,
       kind: opts.kind ?? 'wall',
       screen: [],
@@ -348,13 +486,13 @@ export class App implements AfterViewInit, OnDestroy {
       const floor = FLOORS[i];
       const y = this.floorY(i);
       const detail = this.view() === 'tower' || i === detailFloor;
-      const slabColor = i === 0 ? '#3f4d5c' : i === 11 ? '#53606e' : '#4a5867';
+      const slabColor = i === 0 ? '#8f928c' : i === 9 ? '#929792' : i === 11 ? '#a5a39b' : '#9b9d96';
 
       this.box(target, 0, y + 0.17, 0, 16.4, 0.34, 11.4, slabColor, { floorIndex: i, kind: 'slab', faces: 5 });
 
-      const glassColor = this.night() ? '#fcd34d' : '#7dd3fc';
-      const glassAlpha = this.night() ? 0.15 : 0.085;
-      const glassStroke = this.night() ? 'rgba(252,211,77,.34)' : 'rgba(125,211,252,.24)';
+      const glassColor = this.night() ? '#e8d9b6' : '#c3d4d3';
+      const glassAlpha = this.night() ? 0.16 : 0.13;
+      const glassStroke = this.night() ? 'rgba(245,220,170,.3)' : 'rgba(255,255,255,.2)';
       const glassOpts: BoxOptions = { floorIndex: i, kind: 'glass', alpha: glassAlpha, stroke: glassStroke };
       this.quad(target, [[-8, y + 0.42, 5.5], [8, y + 0.42, 5.5], [8, y + 3.36, 5.5], [-8, y + 3.36, 5.5]], glassColor, glassOpts);
       this.quad(target, [[8, y + 0.42, -5.5], [-8, y + 0.42, -5.5], [-8, y + 3.36, -5.5], [8, y + 3.36, -5.5]], glassColor, glassOpts);
@@ -364,14 +502,14 @@ export class App implements AfterViewInit, OnDestroy {
       const frameOpts: BoxOptions = { floorIndex: i, kind: 'frame', alpha: 0.95 };
       for (const px of [-8, 0, 8]) {
         for (const pz of [-5.5, 5.5]) {
-          this.box(target, px, y + 1.88, pz, 0.16, 3.1, 0.16, '#94a3b8', { ...frameOpts, faces: 3 });
+          this.box(target, px, y + 1.88, pz, 0.16, 3.1, 0.16, '#79827f', { ...frameOpts, faces: 3 });
         }
       }
 
       if (!detail) continue;
 
-      this.box(target, 0, y + 1.38, 0, 3.3, 2.1, 3.3, '#64748b', { floorIndex: i, kind: 'core', faces: 5 });
-      this.box(target, 0, y + 2.48, 0, 3.5, 0.1, 3.5, '#2dd4bf', { floorIndex: i, kind: 'core', faces: 1 });
+      this.box(target, 0, y + 1.38, 0, 3.3, 2.1, 3.3, '#7e8581', { floorIndex: i, kind: 'core', faces: 5 });
+      this.box(target, 0, y + 2.48, 0, 3.5, 0.1, 3.5, '#b0a893', { floorIndex: i, kind: 'core', faces: 1 });
 
       for (const room of floor.rooms) {
         const opts: BoxOptions = { roomId: room.id, floorIndex: i, alpha: 0.95 };
@@ -381,29 +519,46 @@ export class App implements AfterViewInit, OnDestroy {
           [room.x + room.w / 2 - inset, y + 0.35, room.z - room.d / 2 + inset],
           [room.x + room.w / 2 - inset, y + 0.35, room.z + room.d / 2 - inset],
           [room.x - room.w / 2 + inset, y + 0.35, room.z + room.d / 2 - inset],
-        ], room.color, { ...opts, kind: 'patch', alpha: room.status === 'vendido' ? 0.16 : 0.32, stroke: this.rgba(room.color, 0.65) });
+        ], room.material, { ...opts, kind: 'patch', alpha: room.status === 'vendido' ? 0.72 : 0.96, stroke: 'rgba(255,255,255,.16)' });
+
+        if (this.night()) {
+          this.quad(target, [
+            [room.x - room.w * 0.32, y + 0.36, room.z - room.d * 0.3],
+            [room.x + room.w * 0.32, y + 0.36, room.z - room.d * 0.3],
+            [room.x + room.w * 0.32, y + 0.36, room.z + room.d * 0.3],
+            [room.x - room.w * 0.32, y + 0.36, room.z + room.d * 0.3],
+          ], '#f5dfb0', { ...opts, kind: 'patch', alpha: 0.14 });
+        }
 
         const wallH = 0.92;
         const wallY = y + 0.36 + wallH / 2;
-        const wallColor = '#cbd5e1';
+        const wallColor = '#dcd8cf';
         this.box(target, room.x, wallY, room.z - room.d / 2 + 0.08, room.w, wallH, 0.16, wallColor, { ...opts, faces: 4 });
         this.box(target, room.x, wallY, room.z + room.d / 2 - 0.08, room.w, wallH, 0.16, wallColor, { ...opts, faces: 4 });
         this.box(target, room.x - room.w / 2 + 0.08, wallY, room.z, 0.16, wallH, room.d, wallColor, { ...opts, faces: 4 });
         this.box(target, room.x + room.w / 2 - 0.08, wallY, room.z, 0.16, wallH, room.d, wallColor, { ...opts, faces: 4 });
 
-        if (floor.kind === 'residencial' || floor.kind === 'atico') {
-          this.box(target, room.x - room.w * 0.22, y + 0.72, room.z - room.d * 0.16, room.w * 0.32, 0.68, room.d * 0.3, this.shade(room.color, 0.72), { ...opts, kind: 'furniture', faces: 3 });
-          this.box(target, room.x + room.w * 0.22, y + 0.62, room.z + room.d * 0.2, room.w * 0.26, 0.48, room.d * 0.22, '#e2e8f0', { ...opts, kind: 'furniture', faces: 3 });
-        } else if (floor.kind === 'amenidades') {
-          this.box(target, room.x, y + 0.48, room.z, room.w * 0.62, 0.24, room.d * 0.52, this.shade(room.color, 0.85), { ...opts, kind: 'furniture', faces: 2 });
+        if (this.furnished()) {
+          const visible = this.view() === 'tower' ? room.items.slice(0, 2) : room.items;
+          for (const item of visible) {
+            this.box(target, item.x, y + 0.36 + item.h / 2, item.z, item.w, item.h, item.d, item.color, {
+              ...opts,
+              itemId: item.id,
+              itemName: item.name,
+              kind: 'furniture',
+              faces: 4,
+            });
+          }
         }
+
+        this.box(target, room.x + room.w / 2 - 0.42, y + 0.58, room.z + room.d / 2 - 0.42, 0.3, 0.3, 0.3, STATUS_COLOR[room.status], { ...opts, kind: 'furniture', faces: 4 });
       }
 
       if (floor.kind === 'atico' || i === 0) {
         for (const px of [-6.6, 6.6]) {
           for (const pz of [-4.2, 4.2]) {
-            this.box(target, px, y + 0.72, pz, 1.5, 0.66, 1.5, '#166534', { floorIndex: i, kind: 'roof', faces: 3, alpha: 0.9 });
-            this.box(target, px, y + 1.16, pz, 1.1, 0.42, 1.1, '#4ade80', { floorIndex: i, kind: 'roof', faces: 3, alpha: 0.85 });
+            this.box(target, px, y + 0.72, pz, 1.5, 0.66, 1.5, '#6b6357', { floorIndex: i, kind: 'roof', faces: 3, alpha: 0.9 });
+            this.box(target, px, y + 1.16, pz, 1.1, 0.42, 1.1, '#658a68', { floorIndex: i, kind: 'roof', faces: 3, alpha: 0.9 });
           }
         }
       }
@@ -479,12 +634,12 @@ export class App implements AfterViewInit, OnDestroy {
         const active = selected === i;
         ctx.save();
         this.roundRect(ctx, p.x - w / 2, p.y - h / 2, w, h, 7 * scale);
-        ctx.fillStyle = active ? 'rgba(16,185,129,.95)' : 'rgba(8,20,28,.82)';
+        ctx.fillStyle = active ? 'rgba(63,125,104,.96)' : 'rgba(12,22,25,.88)';
         ctx.fill();
-        ctx.strokeStyle = active ? '#6ee7b7' : 'rgba(94,234,212,.35)';
+        ctx.strokeStyle = active ? '#a8d0bf' : 'rgba(200,212,205,.32)';
         ctx.lineWidth = 1;
         ctx.stroke();
-        ctx.fillStyle = active ? '#052e24' : '#ccfbf1';
+        ctx.fillStyle = active ? '#f4faf5' : '#e3e9e6';
         ctx.font = `700 ${11 * scale}px system-ui, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -506,15 +661,19 @@ export class App implements AfterViewInit, OnDestroy {
       const w = ctx.measureText(text).width + 22 * scale;
       const h = 24 * scale;
       this.roundRect(ctx, p.x - w / 2, p.y - h / 2, w, h, 8 * scale);
-      ctx.fillStyle = active ? this.rgba(room.color, 0.95) : 'rgba(7,18,26,.88)';
+      ctx.fillStyle = active ? 'rgba(47,74,67,.96)' : 'rgba(12,22,25,.9)';
       ctx.fill();
-      ctx.strokeStyle = active || hovered ? room.color : this.rgba(room.color, 0.45);
+      ctx.strokeStyle = active || hovered ? '#d8c39a' : 'rgba(200,212,205,.3)';
       ctx.lineWidth = active ? 2 : 1;
       ctx.stroke();
-      ctx.fillStyle = active ? '#07130f' : '#e2e8f0';
+      ctx.fillStyle = active ? '#fbf3df' : '#e6ece9';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, p.x, p.y + 0.5);
+      ctx.beginPath();
+      ctx.arc(p.x - w / 2 + 9 * scale, p.y, 3 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = STATUS_COLOR[room.status];
+      ctx.fill();
       ctx.restore();
     }
   }
@@ -535,33 +694,40 @@ export class App implements AfterViewInit, OnDestroy {
     this.faces = faces;
 
     const selectedRoomId = this.selectedRoom()?.id;
+    const selectedItemId = this.selectedItem()?.id;
     const hoveredId = this.hoveredRoom();
     const selectedFloor = this.selectedFloor();
 
     for (const face of faces) {
       let alpha = face.alpha;
-      if (this.view() !== 'tower' && face.floorIndex !== selectedFloor) alpha *= 0.13;
+      if (this.view() !== 'tower' && face.floorIndex !== selectedFloor) alpha *= 0.14;
       if (face.kind === 'glass' && this.view() === 'floor') alpha *= 0.6;
-      if (face.roomId === hoveredId) alpha = Math.min(1, alpha + 0.3);
-      if (face.roomId === selectedRoomId) alpha = Math.min(1, alpha + 0.22);
+      if (face.roomId === hoveredId) alpha = Math.min(1, alpha + 0.12);
+      if (face.roomId === selectedRoomId) alpha = Math.min(1, alpha + 0.04);
+      if (face.itemId === selectedItemId) alpha = 1;
       if (alpha <= 0.01) continue;
 
-      const highlighted = face.roomId && (face.roomId === hoveredId || face.roomId === selectedRoomId);
+      const roomHighlighted = !!face.roomId && (face.roomId === hoveredId || face.roomId === selectedRoomId);
+      const itemSelected = !!face.itemId && face.itemId === selectedItemId;
       ctx.save();
       ctx.beginPath();
       ctx.moveTo(face.screen[0].x, face.screen[0].y);
       for (let i = 1; i < face.screen.length; i++) ctx.lineTo(face.screen[i].x, face.screen[i].y);
       ctx.closePath();
       ctx.fillStyle = this.rgba(face.color, alpha);
-      if (highlighted && face.kind === 'patch') {
-        ctx.shadowColor = face.color;
-        ctx.shadowBlur = 16 + Math.sin(this.time * 3) * 5;
+      if (roomHighlighted && face.kind === 'patch') {
+        ctx.shadowColor = 'rgba(255,244,214,.8)';
+        ctx.shadowBlur = 9 + Math.sin(this.time * 2.4) * 3;
+      }
+      if (itemSelected) {
+        ctx.shadowColor = '#e8c98a';
+        ctx.shadowBlur = 14;
       }
       ctx.fill();
       ctx.shadowBlur = 0;
-      if (face.stroke || highlighted) {
-        ctx.strokeStyle = highlighted ? this.rgba(face.color, 0.95) : (face.stroke ?? 'transparent');
-        ctx.lineWidth = highlighted ? 2 : 1;
+      if (face.stroke || roomHighlighted || itemSelected) {
+        ctx.strokeStyle = itemSelected ? '#f0d39a' : roomHighlighted ? 'rgba(255,252,240,.9)' : (face.stroke ?? 'transparent');
+        ctx.lineWidth = itemSelected ? 2.4 : roomHighlighted ? 1.6 : 1;
         ctx.stroke();
       }
       ctx.restore();
@@ -613,10 +779,27 @@ export class App implements AfterViewInit, OnDestroy {
       this.goal.pitch = Math.max(0.18, Math.min(1.08, this.goal.pitch + dy * 0.004));
       this.lastX = event.clientX;
       this.lastY = event.clientY;
+      this.tooltip.set(null);
       return;
     }
     const face = this.pick(event);
     this.hoveredRoom.set(face?.roomId ?? null);
+    const rect = this.canvas?.getBoundingClientRect();
+    if (!rect) return;
+    const x = event.clientX - rect.left + 16;
+    const y = event.clientY - rect.top + 16;
+    const floorIndex = face?.floorIndex;
+    if (face?.itemName && floorIndex !== undefined) {
+      const room = FLOORS[floorIndex].rooms.find((r) => r.id === face.roomId);
+      this.tooltip.set({ x, y, title: face.itemName, sub: room ? `${room.name} · clic para ver el elemento` : 'Elemento del espacio' });
+    } else if (face?.roomId && floorIndex !== undefined) {
+      const room = FLOORS[floorIndex].rooms.find((r) => r.id === face.roomId);
+      if (room) this.tooltip.set({ x, y, title: room.name, sub: `${room.area} m² · ${STATUS_LABEL[room.status]} · clic para entrar` });
+    } else if (floorIndex !== undefined) {
+      this.tooltip.set({ x, y, title: FLOORS[floorIndex].name, sub: 'Nivel del edificio · clic para explorar' });
+    } else {
+      this.tooltip.set(null);
+    }
   }
 
   onPointerUp(event: PointerEvent): void {
@@ -624,17 +807,24 @@ export class App implements AfterViewInit, OnDestroy {
     if (this.moved) return;
     const face = this.pick(event);
     if (!face) return;
-    if (face.roomId && face.floorIndex !== undefined) {
-      const room = FLOORS[face.floorIndex].rooms.find((r) => r.id === face.roomId);
-      if (room) this.selectRoom(room, face.floorIndex);
-    } else if (face.floorIndex !== undefined) {
-      this.selectFloor(face.floorIndex);
+    const floorIndex = face.floorIndex;
+    const room = face.roomId && floorIndex !== undefined ? FLOORS[floorIndex].rooms.find((r) => r.id === face.roomId) : undefined;
+    if (!room || floorIndex === undefined) {
+      if (floorIndex !== undefined) this.selectFloor(floorIndex);
+      return;
+    }
+    if (face.itemId) {
+      const item = room.items.find((i) => i.id === face.itemId);
+      if (item) this.selectItem(item, room, floorIndex);
+    } else {
+      this.selectRoom(room, floorIndex);
     }
   }
 
   onPointerLeave(): void {
     this.dragging = false;
     this.hoveredRoom.set(null);
+    this.tooltip.set(null);
   }
 
   onWheel(event: WheelEvent): void {
@@ -645,6 +835,9 @@ export class App implements AfterViewInit, OnDestroy {
   selectFloor(index: number): void {
     this.selectedFloor.set(index);
     this.selectedRoom.set(null);
+    this.selectedItem.set(null);
+    this.tour.set(false);
+    this.tooltip.set(null);
     this.view.set('floor');
     this.goal.targetY = this.floorY(index) + 1.2;
     this.goal.zoom = 1.62;
@@ -654,16 +847,54 @@ export class App implements AfterViewInit, OnDestroy {
   selectRoom(room: Room, floorIndex: number): void {
     this.requestSent.set(false);
     this.selectedRoom.set(room);
+    this.selectedItem.set(null);
     this.selectedFloor.set(floorIndex);
     this.view.set('room');
+    this.tour.set(false);
+    this.tooltip.set(null);
     this.goal.targetY = this.floorY(floorIndex) + 1.2;
     this.goal.zoom = 2.05;
     this.goal.pitch = 0.8;
   }
 
+  selectItem(item: RoomItem, room: Room, floorIndex: number): void {
+    this.requestSent.set(false);
+    this.selectedItem.set(item);
+    this.selectedRoom.set(room);
+    this.selectedFloor.set(floorIndex);
+    this.view.set('room');
+    this.tooltip.set(null);
+    this.goal.targetY = this.floorY(floorIndex) + 1.2;
+    this.goal.zoom = 2.6;
+    this.goal.pitch = 0.72;
+  }
+
+  clearItem(): void {
+    this.selectedItem.set(null);
+    this.goal.zoom = this.tour() ? 2.45 : 2.05;
+    this.goal.pitch = this.tour() ? 0.48 : 0.8;
+  }
+
+  toggleFurnished(): void {
+    this.furnished.update((v) => !v);
+    if (!this.furnished()) this.selectedItem.set(null);
+  }
+
+  toggleTour(): void {
+    const next = !this.tour();
+    this.tour.set(next);
+    if (!next) {
+      this.goal.pitch = this.selectedItem() ? 0.72 : 0.8;
+      this.goal.zoom = this.selectedItem() ? 2.6 : 2.05;
+    }
+  }
+
   backToTower(): void {
     this.selectedFloor.set(null);
     this.selectedRoom.set(null);
+    this.selectedItem.set(null);
+    this.tour.set(false);
+    this.tooltip.set(null);
     this.view.set('tower');
     this.goal.targetY = this.midY() + 1.7;
     this.goal.zoom = this.exploded() ? 0.8 : 0.7;
@@ -719,7 +950,8 @@ export class App implements AfterViewInit, OnDestroy {
       event.preventDefault();
       this.stepFloor(1);
     } else if (event.key === 'Escape') {
-      this.backToTower();
+      if (this.selectedItem()) this.clearItem();
+      else this.backToTower();
     }
   }
 }
